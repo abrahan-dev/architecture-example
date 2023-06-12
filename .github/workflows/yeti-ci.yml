@@ -1,0 +1,39 @@
+name: YETI CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      db_frontoffice_backend_test:
+        image: mysql:8.0.33
+        env:
+          MYSQL_ROOT_PASSWORD: yeti
+          MYSQL_DATABASE: db_frontoffice_backend_test
+        ports:
+          - 33062:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm install
+        run: |
+          npm install
+      - name: npm run lint
+        run: |
+          npm run lint
+      - name: npm run build
+        run: |
+          npm run build --if-present
+      - name: npm test
+        run: |
+          npm test
